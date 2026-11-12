@@ -1,0 +1,948 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#080b12">
+  <title>Personal AI — Your Intelligence</title>
+
+  <style>
+    :root {
+      --bg: #080b12;
+      --panel: #101621;
+      --panel2: #151e2b;
+      --border: rgba(255,255,255,.08);
+      --text: #edf3ff;
+      --muted: #8794a9;
+      --blue: #6d9dff;
+      --blue2: #3978ef;
+      --green: #61d6a5;
+      --radius: 18px;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      min-height: 100vh;
+      background:
+        radial-gradient(ellipse at 50% -20%, #192c4a 0%, transparent 55%),
+        var(--bg);
+      color: var(--text);
+      font-family: Inter, system-ui, Arial, sans-serif;
+    }
+
+    button, textarea, select {
+      font: inherit;
+    }
+
+    button {
+      cursor: pointer;
+    }
+
+    .app {
+      min-height: 100vh;
+      display: flex;
+    }
+
+    /* SIDEBAR */
+
+    .sidebar {
+      width: 250px;
+      padding: 24px 16px;
+      border-right: 1px solid var(--border);
+      background: rgba(10,14,22,.88);
+      display: flex;
+      flex-direction: column;
+      gap: 28px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 11px;
+      padding: 0 8px;
+    }
+
+    .brand-icon {
+      width: 38px;
+      height: 38px;
+      border-radius: 13px;
+      display: grid;
+      place-items: center;
+      color: white;
+      font-size: 20px;
+      background: linear-gradient(135deg,#80b8ff,#345fe3);
+      box-shadow: 0 0 25px #3978ef55;
+    }
+
+    .brand-name {
+      font-weight: 750;
+      letter-spacing: .5px;
+    }
+
+    .brand-sub {
+      color: var(--muted);
+      font-size: 10px;
+      letter-spacing: 1.5px;
+      margin-top: 3px;
+    }
+
+    .new-chat {
+      width: 100%;
+      border: 1px solid #426fc2;
+      color: #dce9ff;
+      background: #172743;
+      padding: 13px;
+      border-radius: 12px;
+      text-align: left;
+      transition: .2s;
+    }
+
+    .new-chat:hover {
+      background: #20375e;
+    }
+
+    .nav-title {
+      color: #66748a;
+      font-size: 10px;
+      letter-spacing: 1.8px;
+      padding: 0 10px;
+      margin-bottom: 9px;
+    }
+
+    .nav {
+      display: grid;
+      gap: 6px;
+    }
+
+    .nav button {
+      border: 0;
+      background: transparent;
+      color: var(--muted);
+      padding: 12px;
+      border-radius: 11px;
+      text-align: left;
+      transition: .2s;
+    }
+
+    .nav button:hover,
+    .nav button.active {
+      color: white;
+      background: var(--panel2);
+    }
+
+    .sidebar-bottom {
+      margin-top: auto;
+      border-top: 1px solid var(--border);
+      padding-top: 18px;
+    }
+
+    .profile {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      padding: 8px;
+    }
+
+    .avatar {
+      width: 35px;
+      height: 35px;
+      border-radius: 50%;
+      background: linear-gradient(135deg,#4678c9,#263e72);
+      display: grid;
+      place-items: center;
+      font-weight: bold;
+    }
+
+    .profile small {
+      display: block;
+      color: var(--muted);
+      margin-top: 3px;
+    }
+
+    /* MAIN */
+
+    .main {
+      flex: 1;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+
+    .topbar {
+      min-height: 72px;
+      padding: 0 30px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .top-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .topbar h2 {
+      font-size: 15px;
+      font-weight: 650;
+    }
+
+    .online {
+      color: var(--green);
+      font-size: 11px;
+      margin-top: 4px;
+    }
+
+    .top-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .icon-btn {
+      width: 38px;
+      height: 38px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      color: var(--text);
+      background: var(--panel);
+    }
+
+    .content {
+      width: 100%;
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 35px 25px 25px;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* HERO */
+
+    .hero {
+      text-align: center;
+      padding: 18px 0 30px;
+    }
+
+    .orb-wrap {
+      width: 116px;
+      height: 116px;
+      margin: 0 auto 22px;
+      display: grid;
+      place-items: center;
+      position: relative;
+    }
+
+    .orb-ring {
+      position: absolute;
+      inset: 0;
+      border: 1px solid #6da5ff55;
+      border-radius: 50%;
+      animation: rotate 12s linear infinite;
+    }
+
+    .orb-ring::before {
+      content: "";
+      position: absolute;
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      background: #a9d8ff;
+      top: 12px;
+      left: 15px;
+      box-shadow: 0 0 15px #80c7ff;
+    }
+
+    .orb {
+      width: 82px;
+      height: 82px;
+      border-radius: 50%;
+      background:
+        radial-gradient(circle at 30% 25%, #d3f2ff 0%, #75b9ff 13%,
+        #427be9 40%, #1b347e 72%, #101a40 100%);
+      box-shadow:
+        0 0 30px #448aff88,
+        inset -8px -10px 20px #08122d;
+      animation: breathe 4s ease-in-out infinite;
+    }
+
+    @keyframes rotate {
+      to { transform: rotate(360deg); }
+    }
+
+    @keyframes breathe {
+      50% { transform: scale(1.06); }
+    }
+
+    .hero h1 {
+      font-size: clamp(25px,5vw,36px);
+      letter-spacing: -1px;
+    }
+
+    .hero h1 span {
+      color: #8dbaff;
+    }
+
+    .hero p {
+      color: var(--muted);
+      font-size: 13px;
+      margin-top: 10px;
+      line-height: 1.7;
+    }
+
+    /* QUICK ACTIONS */
+
+    .quick-actions {
+      display: grid;
+      grid-template-columns: repeat(3,1fr);
+      gap: 12px;
+      margin: 10px 0 25px;
+    }
+
+    .quick-card {
+      border: 1px solid var(--border);
+      background: rgba(17,24,37,.8);
+      padding: 16px;
+      border-radius: 15px;
+      text-align: left;
+      color: var(--text);
+      transition: .2s;
+    }
+
+    .quick-card:hover {
+      border-color: #5485d8;
+      transform: translateY(-2px);
+    }
+
+    .quick-card .symbol {
+      font-size: 20px;
+      margin-bottom: 12px;
+    }
+
+    .quick-card strong {
+      font-size: 12px;
+      display: block;
+    }
+
+    .quick-card small {
+      color: var(--muted);
+      font-size: 10px;
+      display: block;
+      margin-top: 6px;
+      line-height: 1.5;
+    }
+
+    /* CHAT */
+
+    .chat-area {
+      flex: 1;
+      min-height: 120px;
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+      padding-bottom: 20px;
+    }
+
+    .message {
+      max-width: 85%;
+      padding: 13px 16px;
+      border-radius: 15px;
+      font-size: 13px;
+      line-height: 1.7;
+      overflow-wrap: anywhere;
+    }
+
+    .message.user {
+      align-self: flex-end;
+      background: #24477f;
+      border: 1px solid #3e6cb0;
+      border-bottom-right-radius: 4px;
+    }
+
+    .message.ai {
+      align-self: flex-start;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-bottom-left-radius: 4px;
+    }
+
+    .message-label {
+      color: #9dbfff;
+      font-size: 10px;
+      margin-bottom: 5px;
+      letter-spacing: .8px;
+    }
+
+    /* INPUT */
+
+    .composer {
+      border: 1px solid #29364c;
+      background: #111a28;
+      border-radius: 17px;
+      padding: 12px;
+      box-shadow: 0 12px 35px #0004;
+    }
+
+    .composer textarea {
+      display: block;
+      width: 100%;
+      min-height: 55px;
+      max-height: 130px;
+      resize: vertical;
+      background: transparent;
+      border: 0;
+      outline: none;
+      color: white;
+      font-size: 13px;
+      padding: 7px;
+    }
+
+    .composer textarea::placeholder {
+      color: #75849b;
+    }
+
+    .composer-bottom {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      padding-top: 8px;
+      border-top: 1px solid var(--border);
+    }
+
+    .composer-tools {
+      display: flex;
+      gap: 7px;
+      flex-wrap: wrap;
+    }
+
+    .tool-btn {
+      border: 1px solid var(--border);
+      background: #192536;
+      color: #a9b9d0;
+      border-radius: 9px;
+      padding: 8px 10px;
+      font-size: 11px;
+    }
+
+    .tool-btn.selected {
+      color: white;
+      border-color: #5489df;
+      background: #203b65;
+    }
+
+    .send-btn {
+      border: 0;
+      background: linear-gradient(135deg,#6ba7ff,#356ce2);
+      color: white;
+      padding: 10px 18px;
+      border-radius: 10px;
+      font-weight: 650;
+    }
+
+    .send-btn:active {
+      transform: scale(.97);
+    }
+
+    .disclaimer {
+      text-align: center;
+      color: #65738a;
+      font-size: 10px;
+      padding: 13px 0 0;
+      line-height: 1.6;
+    }
+
+    /* SETTINGS PANEL */
+
+    .settings-panel {
+      display: none;
+      max-width: 650px;
+      width: 100%;
+      margin: 20px auto;
+      padding: 22px;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+    }
+
+    .settings-panel.visible {
+      display: block;
+    }
+
+    .settings-panel h3 {
+      margin-bottom: 18px;
+    }
+
+    .setting {
+      padding: 16px 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .setting:last-child {
+      border-bottom: 0;
+    }
+
+    .setting label {
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .setting p {
+      color: var(--muted);
+      font-size: 11px;
+      margin-top: 6px;
+      line-height: 1.6;
+    }
+
+    .setting select {
+      width: 100%;
+      margin-top: 12px;
+      padding: 12px;
+      background: #1a2637;
+      border: 1px solid var(--border);
+      color: white;
+      border-radius: 10px;
+    }
+
+    .status-note {
+      color: #e9bd72;
+      background: #3b2e1b66;
+      border: 1px solid #8e683544;
+      border-radius: 10px;
+      padding: 12px;
+      margin-top: 15px;
+      font-size: 11px;
+      line-height: 1.6;
+    }
+
+    /* MOBILE */
+
+    .mobile-brand {
+      display: none;
+    }
+
+    @media(max-width:760px) {
+      .sidebar {
+        display: none;
+      }
+
+      .topbar {
+        padding: 0 16px;
+        min-height: 65px;
+      }
+
+      .content {
+        padding: 20px 15px;
+      }
+
+      .hero {
+        padding-top: 15px;
+      }
+
+      .orb-wrap {
+        width: 100px;
+        height: 100px;
+      }
+
+      .orb {
+        width: 72px;
+        height: 72px;
+      }
+
+      .quick-actions {
+        gap: 8px;
+      }
+
+      .quick-card {
+        padding: 12px 9px;
+      }
+
+      .quick-card strong {
+        font-size: 11px;
+      }
+
+      .quick-card small {
+        font-size: 9px;
+      }
+
+      .message {
+        max-width: 94%;
+      }
+
+      .tool-btn {
+        padding: 8px;
+      }
+    }
+
+    @media(max-width:390px) {
+      .quick-actions {
+        grid-template-columns: 1fr;
+      }
+
+      .quick-card {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+
+      .quick-card .symbol {
+        margin: 0;
+      }
+    }
+  </style>
+</head>
+
+<body>
+<div class="app">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+
+    <div class="brand">
+      <div class="brand-icon">✦</div>
+      <div>
+        <div class="brand-name">PERSONAL AI</div>
+        <div class="brand-sub">YOUR INTELLIGENCE</div>
+      </div>
+    </div>
+
+    <button class="new-chat" onclick="newChat()">
+      ＋ &nbsp; New conversation
+    </button>
+
+    <div>
+      <div class="nav-title">WORKSPACE</div>
+      <nav class="nav">
+        <button class="active" onclick="showPage('chat',this)">◈ &nbsp; AI Assistant</button>
+        <button onclick="showPage('memory',this)">◉ &nbsp; Memory</button>
+        <button onclick="showPage('voice',this)">♫ &nbsp; Voice Studio</button>
+        <button onclick="showPage('tools',this)">⌘ &nbsp; Agent Tools</button>
+        <button onclick="showPage('settings',this)">⚙ &nbsp; Settings</button>
+      </nav>
+    </div>
+
+    <div class="sidebar-bottom">
+      <div class="profile">
+        <div class="avatar">U</div>
+        <div>
+          <strong style="font-size:12px">Personal Space</strong>
+          <small>Private workspace</small>
+        </div>
+      </div>
+    </div>
+
+  </aside>
+
+  <!-- MAIN -->
+  <main class="main">
+
+    <header class="topbar">
+      <div class="top-left">
+        <div class="brand-icon mobile-brand">✦</div>
+        <div>
+          <h2 id="pageTitle">AI Assistant</h2>
+          <div class="online">● Interface ready</div>
+        </div>
+      </div>
+
+      <div class="top-actions">
+        <button class="icon-btn" onclick="newChat()" title="New chat">＋</button>
+        <button class="icon-btn" onclick="showPage('settings')" title="Settings">⚙</button>
+      </div>
+    </header>
+
+    <div class="content">
+
+      <!-- CHAT PAGE -->
+      <section id="chatPage">
+
+        <div class="hero">
+          <div class="orb-wrap">
+            <div class="orb-ring"></div>
+            <div class="orb"></div>
+          </div>
+
+          <h1>Your Personal <span>Intelligence.</span></h1>
+
+          <p>
+            A personal AI system designed to think, learn and assist.<br>
+            Your world. Your intelligence.
+          </p>
+        </div>
+
+        <div class="quick-actions">
+
+          <button class="quick-card" onclick="quickPrompt('Help me plan my day.')">
+            <div class="symbol">◷</div>
+            <div>
+              <strong>Daily Planning</strong>
+              <small>Organize your goals and tasks.</small>
+            </div>
+          </button>
+
+          <button class="quick-card" onclick="quickPrompt('Help me research a topic.')">
+            <div class="symbol">⌕</div>
+            <div>
+              <strong>Research</strong>
+              <small>Explore ideas and information.</small>
+            </div>
+          </button>
+
+          <button class="quick-card" onclick="quickPrompt('Help me solve a problem step by step.')">
+            <div class="symbol">✧</div>
+            <div>
+              <strong>Problem Solving</strong>
+              <small>Think through difficult problems.</small>
+            </div>
+          </button>
+
+        </div>
+
+        <div class="chat-area" id="chatArea">
+          <div class="message ai">
+            <div class="message-label">PERSONAL AI</div>
+            Welcome. Your personal AI workspace is ready.
+            The AI brain will be connected in the next development stage.
+          </div>
+        </div>
+
+        <div class="composer">
+
+          <textarea
+            id="userInput"
+            placeholder="Ask anything. Your assistant starts here..."
+            onkeydown="handleEnter(event)"
+          ></textarea>
+
+          <div class="composer-bottom">
+
+            <div class="composer-tools">
+              <button class="tool-btn" onclick="showPage('voice')">♫ Voice</button>
+              <button class="tool-btn" onclick="showPage('memory')">◉ Memory</button>
+            </div>
+
+            <button class="send-btn" onclick="sendMessage()">
+              Send ↗
+            </button>
+
+          </div>
+        </div>
+
+        <div class="disclaimer">
+          AI connection is not active yet. Messages are currently handled by the local interface only.
+        </div>
+
+      </section>
+
+      <!-- OTHER PAGES -->
+      <section id="otherPage" style="display:none">
+
+        <div class="settings-panel visible" id="pagePanel">
+          <h3 id="panelTitle">Workspace</h3>
+          <div id="panelContent"></div>
+        </div>
+
+      </section>
+
+    </div>
+  </main>
+</div>
+
+<script>
+  const chatArea = document.getElementById("chatArea");
+  const userInput = document.getElementById("userInput");
+
+  let currentVoice = "custom";
+
+  function addMessage(text, type) {
+    const message = document.createElement("div");
+    message.className = "message " + type;
+
+    const label = document.createElement("div");
+    label.className = "message-label";
+    label.textContent = type === "user" ? "YOU" : "PERSONAL AI";
+
+    const content = document.createElement("div");
+    content.textContent = text;
+
+    message.appendChild(label);
+    message.appendChild(content);
+    chatArea.appendChild(message);
+
+    chatArea.scrollTop = chatArea.scrollHeight;
+    message.scrollIntoView({ behavior: "smooth", block: "nearest" });
+  }
+
+  function sendMessage() {
+    const text = userInput.value.trim();
+
+    if (!text) return;
+
+    addMessage(text, "user");
+    userInput.value = "";
+
+    setTimeout(() => {
+      addMessage(
+        "Your message is visible in this interface. The AI backend has not been connected yet. That is our next development milestone.",
+        "ai"
+      );
+    }, 350);
+  }
+
+  function handleEnter(event) {
+    if (event.key === "Enter" && !event.shiftKey) {
+      event.preventDefault();
+      sendMessage();
+    }
+  }
+
+  function quickPrompt(text) {
+    userInput.value = text;
+    userInput.focus();
+  }
+
+  function newChat() {
+    chatArea.innerHTML = "";
+
+    addMessage(
+      "New conversation started. The AI brain will be connected in the next stage.",
+      "ai"
+    );
+
+    userInput.value = "";
+    showPage("chat");
+  }
+
+  function showPage(page, button) {
+    const chatPage = document.getElementById("chatPage");
+    const otherPage = document.getElementById("otherPage");
+    const panelTitle = document.getElementById("panelTitle");
+    const panelContent = document.getElementById("panelContent");
+    const pageTitle = document.getElementById("pageTitle");
+
+    document.querySelectorAll(".nav button").forEach(btn => {
+      btn.classList.remove("active");
+    });
+
+    if (button) button.classList.add("active");
+
+    if (page === "chat") {
+      chatPage.style.display = "block";
+      otherPage.style.display = "none";
+      pageTitle.textContent = "AI Assistant";
+      return;
+    }
+
+    chatPage.style.display = "none";
+    otherPage.style.display = "block";
+
+    const pages = {
+
+      memory: {
+        title: "Memory",
+        content: `
+          <div class="setting">
+            <label>Long-term Memory</label>
+            <p>Remember useful preferences, goals and information with your control.</p>
+          </div>
+          <div class="setting">
+            <label>Memory Management</label>
+            <p>Review, update or delete stored memories.</p>
+          </div>
+          <div class="status-note">
+            Memory database is not connected yet. No long-term memory is being stored.
+          </div>
+        `
+      },
+
+      voice: {
+        title: "Voice Studio",
+        content: `
+          <div class="setting">
+            <label>Choose AI Voice</label>
+            <p>Select which voice you want your assistant to use.</p>
+            <select id="voiceSelect" onchange="changeVoice(this.value)">
+              <option value="custom">Custom AI Voice</option>
+              <option value="personal">My Personal Voice Clone</option>
+            </select>
+          </div>
+          <div class="setting">
+            <label>Voice Conversation</label>
+            <p>Speak with your assistant and receive spoken answers.</p>
+          </div>
+          <div class="setting">
+            <label>Voice Cloning</label>
+            <p>Create a clone from your own voice recordings.</p>
+          </div>
+          <div class="status-note">
+            Voice processing and cloning are not connected yet.
+            Voice cloning will use your own voice or voices you have explicit permission to clone.
+          </div>
+        `
+      },
+
+      tools: {
+        title: "Agent Tools",
+        content: `
+          <div class="setting">
+            <label>Web Research</label>
+            <p>Search, verify and organize useful information.</p>
+          </div>
+          <div class="setting">
+            <label>File Intelligence</label>
+            <p>Read, analyze and summarize documents.</p>
+          </div>
+          <div class="setting">
+            <label>Task Assistance</label>
+            <p>Help plan and complete multi-step tasks.</p>
+          </div>
+          <div class="status-note">
+            Agent tools will be connected after the AI backend is ready.
+          </div>
+        `
+      },
+
+      settings: {
+        title: "Settings",
+        content: `
+          <div class="setting">
+            <label>Assistant Name</label>
+            <p>Personal AI — working project name.</p>
+          </div>
+          <div class="setting">
+            <label>Language</label>
+            <p>Bangla and English support is planned.</p>
+          </div>
+          <div class="setting">
+            <label>Privacy & Security</label>
+            <p>API keys will stay on the secure backend, not in this frontend.</p>
+          </div>
+          <div class="status-note">
+            Core configuration will be connected as backend development progresses.
+          </div>
+        `
+      }
+    };
+
+    const selected = pages[page] || pages.settings;
+
+    panelTitle.textContent = selected.title;
+    panelContent.innerHTML = selected.content;
+    pageTitle.textContent = selected.title;
+  }
+
+  function changeVoice(value) {
+    currentVoice = value;
+  }
+</script>
+
+</body>
+</html>
