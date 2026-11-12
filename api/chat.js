@@ -5,8 +5,8 @@ export default async function handler(req, res) {
   if (req.method === "GET") {
     return res.status(200).json({
       ok: true,
-      service: "Personal AI Agent API",
-      message: "API route is running."
+      service: "Personal AI Agent",
+      provider: "Google Gemini"
     });
   }
 
@@ -18,17 +18,20 @@ export default async function handler(req, res) {
   }
 
   try {
-    const apiKey = process.env.OPENAI_API_KEY;
+    const apiKey = process.env.GEMINI_API_KEY;
 
     if (!apiKey) {
       return res.status(500).json({
-        error: "OPENAI_API_KEY is missing in Vercel Environment Variables."
+        error: "GEMINI_API_KEY is missing."
       });
     }
 
     const body = req.body || {};
+
     const message =
-      typeof body.message === "string" ? body.message.trim() : "";
+      typeof body.message === "string"
+        ? body.message.trim()
+        : "";
 
     if (!message) {
       return res.status(400).json({
@@ -38,107 +41,106 @@ export default async function handler(req, res) {
 
     if (message.length > 12000) {
       return res.status(400).json({
-        error: "Message is too long. Please shorten it."
+        error: "Message is too long."
       });
     }
 
-    // Choose the model
-    const fastModel =
-      process.env.OPENAI_FAST_MODEL || "gpt-6-luna";
+    const model =
+      process.env.GEMINI_MODEL || "gemini-2.5-flash";
 
-    const reasoningModel =
-      process.env.OPENAI_REASONING_MODEL || "gpt-6-astra";
-
-    const requestedModel =
-      typeof body.model === "string" ? body.model : "fast";
-
-    const mode =
-      typeof body.mode === "string" ? body.mode : "auto";
-
-    const complexTask =
-      message.length > 1200 ||
-      /\b(analy[sz]e|reason|architecture|debug|complex|strategy|compare|research|plan|code|program|explain in depth)\b/i.test(message);
-
-    let model = fastModel;
-
-    if (requestedModel === "reasoning") {
-      model = reasoningModel;
-    } else if (mode === "auto" && complexTask) {
-      model = reasoningModel;
-    }
-
-    // Safely prepare conversation history
+    // Prepare conversation history
     const history = Array.isArray(body.history)
-      ? body.history.slice(-12)
+      ? body.history.slice(-10)
       : [];
 
-    const input = [];
+    const contents = [];
 
     for (const item of history) {
-      if (!item || typeof item.content !== "string") continue;
+      if (!item || typeof item.content !== "string") {
+        continue;
+      }
 
-      if (item.role !== "user" && item.role !== "assistant") {
+      if (
+        item.role !== "user" &&
+        item.role !== "assistant"
+      ) {
         continue;
       }
 
       const content = item.content.trim();
 
-      if (!content || content.length > 12000) continue;
+      if (!content || content.length > 12000) {
+        continue;
+      }
 
-      input.push({
-        role: item.role,
-        content: content
+      contents.push({
+        role:
+          item.role === "assistant"
+            ? "model"
+            : "user",
+        parts: [{ text: content }]
       });
     }
 
-    // Avoid sending the latest message twice
-    const lastItem = input[input.length - 1];
+    // Add latest message if not already included
+    const lastItem = contents[contents.length - 1];
 
     if (
       !lastItem ||
       lastItem.role !== "user" ||
-      lastItem.content !== message
+      lastItem.parts[0].text !== message
     ) {
-      input.push({
+      contents.push({
         role: "user",
-        content: message
+        parts: [{ text: message }]
       });
     }
 
+    // AI instructions
+    const systemInstruction = `
+You are a personal AI assistant.
+
+Your responsibilities:
+- Help the user think, plan and solve problems.
+- Give accurate and practical answers.
+- Understand Bengali, Banglish and English.
+- Reply in the language used by the user.
+- Be honest about your abilities and limitations.
+- Never claim that you completed an action you did not perform.
+- Ask for permission before sensitive or important actions.
+- Never invent research, sources or facts.
+- Keep answers clear and useful.
+- Remember the conversation context provided to you.
+`;
+
     const payload = {
-      model: model,
-      instructions:
-        "You are a helpful personal AI assistant. " +
-        "Be accurate, thoughtful, practical, and honest. " +
-        "Follow the user's language. If the user writes Bengali or Banglish, " +
-        "reply naturally in Bengali or Banglish. " +
-        "Never pretend to have completed an action you have not performed. " +
-        "If you do not know something, say so clearly.",
-      input: input,
-      max_output_tokens: 1500,
-      store: false
+      systemInstruction: {
+        parts: [{ text: systemInstruction }]
+      },
+      contents,
+      generationConfig: {
+        temperature: 0.7,
+        maxOutputTokens: 1200
+      }
     };
 
-    if (model === reasoningModel) {
-      payload.reasoning = {
-        effort: "medium"
-      };
-    }
-
-    // Send the message to OpenAI
+    // Call Gemini API
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 55000);
+
+    const timeout = setTimeout(() => {
+      controller.abort();
+    }, 55000);
 
     let response;
 
     try {
       response = await fetch(
-        "https://api.openai.com/v1/responses",
+        `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`,
         {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            "Authorization": `Bearer ${apiKey}`
+            "x-goog-api-key": apiKey
           },
           body: JSON.stringify(payload),
           signal: controller.signal
@@ -150,63 +152,48 @@ export default async function handler(req, res) {
 
     const data = await response.json();
 
+    // Handle API errors
     if (!response.ok) {
-      console.error("OpenAI API error:", data);
+      console.error("Gemini API error:", data);
 
       return res.status(response.status).json({
         error:
           data?.error?.message ||
-          "OpenAI could not process your request."
+          "Gemini could not process your request."
       });
     }
 
-    // Extract the AI's answer
-    let reply =
-      typeof data.output_text === "string"
-        ? data.output_text.trim()
-        : "";
-
-    if (!reply && Array.isArray(data.output)) {
-      for (const item of data.output) {
-        if (item.type === "message" && Array.isArray(item.content)) {
-          for (const part of item.content) {
-            if (
-              part.type === "output_text" &&
-              typeof part.text === "string"
-            ) {
-              reply += part.text;
-            }
-          }
-        }
-      }
-
-      reply = reply.trim();
-    }
+    // Extract AI response
+    const reply =
+      data?.candidates?.[0]?.content?.parts
+        ?.map(part => part.text || "")
+        .join("")
+        .trim() || "";
 
     if (!reply) {
       return res.status(502).json({
-        error: "The AI returned an empty response. Please try again."
+        error: "The AI returned an empty response."
       });
     }
 
-    // Send the answer back to the website
+    // Keep frontend response format unchanged
     return res.status(200).json({
-      reply: reply,
-      provider: "OpenAI",
-      model: model
+      reply,
+      provider: "Google Gemini",
+      model
     });
 
   } catch (error) {
-    console.error("Chat API error:", error);
+    console.error("Personal AI error:", error);
 
     if (error.name === "AbortError") {
       return res.status(504).json({
-        error: "The AI took too long to respond. Please try again."
+        error: "The AI took too long to respond."
       });
     }
 
     return res.status(500).json({
-      error: "Server error. Please check your Vercel deployment and API settings."
+      error: "Server error. Please check your deployment."
     });
   }
-        }
+    }
